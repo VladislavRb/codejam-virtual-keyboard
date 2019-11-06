@@ -75,7 +75,7 @@ function doBackSpace(){
     if(delPos){
         textarea.value = txt.slice(0, delPos - 1) + txt.slice(delPos);
         textarea.focus();
-        textarea.selectionStart = delPos;
+        textarea.selectionStart = textarea.selectionEnd = delPos - 1;
     }
     else{
         textarea.focus();
@@ -88,7 +88,7 @@ function doTab(){
     let curPos = textarea.selectionStart;
     textarea.value = txt.slice(0, curPos) + "\t" + txt.slice(curPos);
     textarea.focus();
-    textarea.selectionStart = curPos + 1;
+    textarea.selectionStart = textarea.selectionEnd = curPos + 1;
 }
 
 function doDel(){
@@ -106,21 +106,32 @@ function doEnter(){
     let curPos = textarea.selectionStart;
     textarea.value = txt.slice(0, curPos) + "\n" + txt.slice(curPos);
     textarea.focus();
-    textarea.selectionStart = curPos + 1;
+    textarea.selectionStart = textarea.selectionEnd = curPos + 1;
 }
 
 function doCapsLock(){
-    getButtonsByTextContent("caps lock").setAttribute("id", "to_lowercase");
-    for(let btn of document.getElementsByClassName("keyboard-button")){
-        if(btn.textContent.length == 1){
-            if(btn.textContent == btn.textContent.toUpperCase()){
-                getButtonsByTextContent("caps lock").setAttribute("id", "to_lowercase");
-                btn.textContent = btn.textContent.toLowerCase();
-            }
-            else{
-                getButtonsByTextContent("caps lock").setAttribute("id", "to_uppercase");
+    if(getButtonsByTextContent("caps lock").id == "to_lowercase"){
+        for(let btn of document.getElementsByClassName("keyboard-button")){
+            if(btn.textContent.length == 1){
                 btn.textContent = btn.textContent.toUpperCase();
             }
+        }
+        getButtonsByTextContent("caps lock").id = "to_uppercase";
+    }
+    else{
+        for(let btn of document.getElementsByClassName("keyboard-button")){
+            if(btn.textContent.length == 1){
+                btn.textContent = btn.textContent.toLowerCase();
+            }
+        }
+        getButtonsByTextContent("caps lock").id = "to_lowercase";
+    }
+}
+
+function doShiftDown(){
+    for(let btn of document.getElementsByClassName("keyboard-button")){
+        if(btn.textContent.length == 1){
+            btn.textContent = btn.textContent.toUpperCase();
         }
     }
 }
@@ -176,7 +187,26 @@ function doLetter(btn){
     let curPos = textarea.selectionStart;
     textarea.value = txt.slice(0, curPos) + btn.textContent + txt.slice(curPos);
     textarea.focus();
-    textarea.selectionStart = curPos + 1;
+    textarea.selectionStart = textarea.selectionEnd = curPos + 1;
+}
+
+function doKeyboardShiftedDown(){
+    event.preventDefault();
+    let letterList = "abcdefghijklmnopqrstuvwxyz";
+    letterList += letterList.toUpperCase();
+    if(letterList.includes(event.key)){
+        let textarea = document.getElementsByTagName("textarea")[0];
+        let text = textarea.value;
+        let curPos = textarea.selectionStart;
+        textarea.value = text.slice(0, curPos) + event.key + text.slice(curPos);
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = curPos + 1
+    }
+    document.body.onkeydown = realKeyboardDown;
+}
+
+function changeLang(){
+    //haven't done yet
 }
 
 
@@ -247,7 +277,6 @@ function loadButton(symbol, width, keyboardRow){
     }
     else{
         if(symbol.slice(-3) == "svg"){
-            newButton.style.backgroundColor = "rgb(180, 180, 180)";
             newButton.style.backgroundImage = "url('" + symbol + "')";
             newButton.style.backgroundRepeat = "no-repeat";
             newButton.style.backgroundSize = "50% 50%";
@@ -278,7 +307,7 @@ function loadButton(symbol, width, keyboardRow){
                     newButton.onclick = doBackSpace;
                     break;
                 case "caps lock":
-                    newButton.setAttribute("id", "to_lowercase");
+                    newButton.id = "to_lowercase";
                     newButton.onclick = doCapsLock;
                     break;
                 case "tab":
@@ -291,13 +320,7 @@ function loadButton(symbol, width, keyboardRow){
                     newButton.onclick = doEnter;
                     break;
                 case "shift":
-                    newButton.addEventListener("mousedown", () => {
-                        for(let btn of document.getElementsByClassName("keyboard-button")){
-                            if(btn.textContent.length == 1){
-                                btn.textContent = btn.textContent.toUpperCase();
-                            }
-                        }
-                    });
+                    newButton.onmousedown = doShiftDown;
                     newButton.onmouseup = doShiftUp;
                     break;
                 case "ctrl":
@@ -355,21 +378,33 @@ function realKeyboardDown(){
     }
     event.preventDefault();
 
+    let eventKey = getProperKey(event.key);
+    if(eventKey.length == 1){
+        if(getButtonsByTextContent("caps lock").id == "to_uppercase"){
+            eventKey = eventKey.toUpperCase();
+        }
+        else{
+            eventKey = eventKey.toLowerCase();
+        }
+    }
+
     let letters = "abcdefghijklmnopqrstuvwxyz";
     letters += letters.toUpperCase() + "1234567890[];',./ \\`~-_=+";
+    
     if(letters.includes(event.key)){
-        insertSymbol(event.key);
+        if(getButtonsByTextContent("caps lock").id == "to_uppercase"){
+            insertSymbol(event.key.toUpperCase());
+        }
+        else{
+            insertSymbol(event.key.toLowerCase());
+        }
     }
     else{
         if(event.key == "Shift"){
-            for(let btn of document.getElementsByClassName("keyboard-button")){
-                if(btn.textContent.length == 1){
-                    btn.textContent = btn.textContent.toUpperCase();
-                }
-            }
+            document.body.onkeydown = doKeyboardShiftedDown;
+            doShiftDown();
         }
     }
-    let eventKey = getProperKey(event.key);
 
     let buttons = getButtonsByTextContent(eventKey);
     let curBtn;
@@ -427,6 +462,7 @@ function realKeyboardUp(){
                         doEnter();
                         break;
                     case "shift":
+                        document.body.onkeydown = realKeyboardDown;
                         doShiftUp();
                         break;
                     case "ctrl":
@@ -435,6 +471,9 @@ function realKeyboardUp(){
                     default:
                 }
             }
+            break;
+        default:
+            break;
     }
     pressedButtons.length = 0;
 }

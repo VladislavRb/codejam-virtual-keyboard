@@ -206,7 +206,6 @@ function doKeyboardShiftedDown(){
 }
 
 function changeLang(){
-    //haven't done yet
 }
 
 
@@ -358,6 +357,7 @@ loadKeyboard();
 loadTextarea();
 
 let pressedButtons = [];
+let tempStyle;
 
 
 
@@ -414,6 +414,7 @@ function realKeyboardDown(){
     else{
         curBtn = buttons;
     }
+    tempStyle = curBtn.style;
     curBtn.style.transition = "border-radius 0.05s";
     curBtn.style.borderRadius = "25px";
     curBtn.style.backgroundColor = "rgb(40, 220, 75)";
@@ -421,12 +422,28 @@ function realKeyboardDown(){
 }
 
 function realKeyboardUp(){
-    let currentKeyCombination = pressedButtons.map(x => x.textContent);
-    let textarea = document.getElementsByTagName("textarea")[0];
     for(let btn of pressedButtons){
         btn.style.transition = "border-radius 0.05s";
         btn.style.borderRadius = "2px";
         btn.style.backgroundColor = "rgb(180, 180, 180)";
+        let width = btn.style.width;
+        btn.style = tempStyle;
+        btn.style.width = width;
+        switch(btn.className){
+            case "arrow-left":
+                btn.style.backgroundImage = "url(assets/images/arrow-left.svg)";
+                break;
+            case "arrow-up":
+                btn.style.backgroundImage = "url(assets/images/arrow-up.svg)";
+                break;
+            case "arrow-right":
+                btn.style.backgroundImage = "url(assets/images/arrow-right.svg)";
+                break;
+            case "arrow-down":
+                btn.style.backgroundImage = "url(assets/images/arrow-down.svg)";
+                break;
+            default:
+        }
     }
     switch(pressedButtons.length){
         case 1:

@@ -429,21 +429,6 @@ function realKeyboardUp(){
         let width = btn.style.width;
         btn.style = tempStyle;
         btn.style.width = width;
-        switch(btn.className){
-            case "arrow-left":
-                btn.style.backgroundImage = "url(assets/images/arrow-left.svg)";
-                break;
-            case "arrow-up":
-                btn.style.backgroundImage = "url(assets/images/arrow-up.svg)";
-                break;
-            case "arrow-right":
-                btn.style.backgroundImage = "url(assets/images/arrow-right.svg)";
-                break;
-            case "arrow-down":
-                btn.style.backgroundImage = "url(assets/images/arrow-down.svg)";
-                break;
-            default:
-        }
     }
     switch(pressedButtons.length){
         case 1:
